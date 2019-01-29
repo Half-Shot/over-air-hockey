@@ -1,0 +1,16 @@
+{
+  "name": "over-air-backend",
+  "version": "0.0.1",
+  "description": "Backend for over-air-hockey",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "express-ws": "^4.0.0"
+  }
+}

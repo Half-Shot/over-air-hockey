@@ -1,0 +1,42 @@
+<body>
+    <h1> Motion! </h1>
+    <p style="color:red" id="error" hidden> Hmm, your device isn't sending any motion events. Is this really a mobile device? </p>
+    <p> X: <span id="moX">$</p>
+    <p> Y: <span id="moY">$</p>
+    <p> Z: <span id="moZ">$</p>
+
+    <script>
+        setTimeout(() => {
+            if (window.accelSupported === false) {
+                document.querySelector("#error").hidden = false;
+            }
+        }, 1500);
+        const conn = new WebSocket("ws://10.128.76.198:3000/ws");
+        window.accelCooldown = false;
+        window.accelSupported = false;
+        function handleMotionEvent(event) {
+            window.accelSupported = true;
+            const x = Math.round(event.acceleration.x * 100) / 100;
+            const y = Math.round(event.acceleration.y * 100) / 100;
+            const z = Math.round(event.acceleration.z * 100) / 100;
+            if (x > 6 || y > 6) {
+                conn.send(JSON.stringify({x, y}));
+                if (!window.accelCooldown) {
+                    window.accelCooldown = true;
+                    document.body.style.setProperty("background-color", "red");
+                    setTimeout(() => {
+                        document.body.style.removeProperty("background-color");
+                        window.accelCooldown = false;
+                    }, 400);
+                }
+            }
+
+            document.querySelector("#moX").innerHTML = x;
+            document.querySelector("#moY").innerHTML = y;
+            document.querySelector("#moZ").innerHTML = z;
+            // Do something awesome.
+        }
+
+        window.addEventListener("devicemotion", handleMotionEvent, true);
+    </script>
+</body>
