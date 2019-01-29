@@ -6,4 +6,5 @@ window.addEventListener("devicemotion", e => {
   if (power > 5) {
     document.body.style.setProperty("background-color", "red");
   }
+  
 }, true);
