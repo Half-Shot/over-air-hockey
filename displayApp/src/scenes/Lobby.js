@@ -19,12 +19,15 @@ export default class extends Phaser.Scene {
             this.ws.onJson = (msg) => {
                 if (msg.type === "players") {
                     this.renderPlayerList(msg.players);
+                } else if (msg.type === "start") {
+                    this.scene.start('GameScene', {sessionId});
+                    this.scene.stop("LobbyScene");
                 }
                 console.log("RX:", msg);
             };
             return this.game.oahBackend.getSession(sessionId);
-        }).then((session) => {
-            this.renderPlayerList(session.players);
+        }).then(({players}) => {
+            this.renderPlayerList(players);
         });
     }
 
@@ -35,10 +38,21 @@ export default class extends Phaser.Scene {
             textObject.destroy();
         });
         Object.keys(players).forEach((name, i) => {
-            const state = players[name].state === "notready" ? "Not Ready" : "Ready";
+            let state;
+            let color;
+            if (players[name].state === "ready") {
+                state = "Ready";
+                color = "Green";
+            } else if (players[name].state === "notready") {
+                state = "Not Ready";
+                color = "Orange";
+            } else if (players[name].state === "disconnected") {
+                state = "Disconnected";
+                color = "Grey";
+            }
             this.playerText.push(this.add.text(150, 300 + (33*i), `${name} - ${state}`, {
                 font: `${config.scaleY * 20}px Sarabun`,
-                fill: state === "Ready" ? "green" : "red",
+                fill: color,
             }));
         });
     }

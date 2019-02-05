@@ -43,6 +43,7 @@
     </style>
     <script>
         function joinGame() {
+            console.log("Join Game called")
             window.startClient(document.querySelector("#nick").value);
         }
     </script>
@@ -60,6 +61,7 @@
     <section id="lobby" hidden>
         <p>You are in the lobby.</p>
         <button id="readyup" onclick="readyUp()">Ready up!</button>
+        <button id="startGame" onclick="startGame()" disabled>Start game!</button>
     </section>
     <section id="game" hidden>
         <p> The game is in play! Use your device like an Air Hockey paddle</p>

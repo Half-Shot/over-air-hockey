@@ -1,11 +1,13 @@
 const log = require("npmlog");
 
+
 class AirGame {
     constructor (tableWidthMeters = 2, tableLengthMeters = 8) {
         this.players = {};
         this.spectators = {};
         // Generate an ID for players to find us, 6 chars long.
         this.id = String(Math.ceil(Math.random()*1000000));
+        this.GLSTR = "Game:" + this.id;
         this.state = "lobby"; // One of "lobby", "game", "finished"
 
         // TODO: Best way to calculate size of table from meters.
@@ -26,7 +28,13 @@ class AirGame {
     get json() {
         const players = {};
         Object.keys(this.players).forEach((k) => players[k] = {state: this.players[k].state});
-        return {id: this.id, state: this.state, players, spectators: Object.keys(this.spectators).length};
+        return {id: this.id, state: this.state, players, spectators: Object.keys(this.spectators).length, canStart: this.canStart};
+    }
+
+    get canStart() {
+        return this.state === "lobby" && Object.values(this.players).filter((p) =>
+            p.state === "ready"
+        ).length >= 2;
     }
 
     /**
@@ -34,6 +42,17 @@ class AirGame {
      */
     get isRunning() {
         return this.state === "game";
+    }
+
+    start () {
+        if (this.state === "game") {
+            throw Error ("Already in-game");
+        } else if (!this.canStart) {
+            throw Error ("Cannot start, not all conditions have been met");
+        }
+        this.state = "game";
+        // TODO: Put the players in the right positions and set everything up.
+        this.broadcast({type: "start"});
     }
 
     /**
@@ -45,21 +64,31 @@ class AirGame {
         if (!ws || !type || !nick) {
             throw Error("Missing argument(s)");
         }
+        log.info(this.GLSTR, `New ${type} connected: ${nick}`);
         if (type === "controller") {
-            if (this.players[nick]) {
+            if (this.players[nick] && this.players[nick].ws) {
+                log.warn(`Dropping existing connection for ${nick}`);
                 this.players[nick].ws.close();
             }
             this.players[nick] = {ws, state: "notready"};
-            this.broadcast({
-                type: "players",
-                players: this.json.players,
-            });
+            console.log(this.players);
+            this._broadcastPlayers();
         } else if (type === "spectator") {
             if (this.spectators[nick]) {
+                log.warn(`Dropping existing connection for ${nick}`);
                 this.spectators[nick].close();
             }
             this.spectators[nick] = ws;
         }
+        ws.on('close', (ev) => {
+            log.info(this.GLSTR, `${type} ${nick} closed connection`, ev);
+            if (type === "controller") {
+                this.players[nick] = {ws: null, state: "disconnected"};
+                this._broadcastPlayers();
+            } else {
+                delete this.spectators[nick];
+            }
+        });
     }
 
     setPlayerReady(ws) {
@@ -70,16 +99,22 @@ class AirGame {
             throw Error ("Player not found");
         }
         player.state = "ready";
+        this._broadcastPlayers();
+    }
+
+    _broadcastPlayers() {
+        const json = this.json;
         this.broadcast({
             type: "players",
-            players: this.json.players,
+            players: json.players,
+            canStart: json.canStart,
         });
     }
 
     onData(msg) {
         // TODO: Check authenticity of user.
         if (msg.type === "start") {
-            log.info("Game:" + this.id, "Starting game");
+            log.info(this.GLSTR, "Starting game");
             this.state = "game";
         }
     }
@@ -144,8 +179,8 @@ class AirGame {
         if (sendTo === "all" || sendTo === "spectators") {
             recipients = recipients.concat(Object.values(this.spectators));
         }
-        console.log(recipients);
         recipients.forEach((ws) => {
+            if (!ws) { return; }
             ws.sendJson(msg);
         });
     }

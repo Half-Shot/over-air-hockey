@@ -41,7 +41,7 @@ app.get('/session/:id', (req, res) => {
 
 
 app.ws('/ws', function(ws, req) {
-    ws.sendJson = function (data) { this.send(JSON.stringify(data)); }
+    ws.sendJson = function (data) { log.silly("TX:", data); this.send(JSON.stringify(data)); }
     ws.on('message', function(msgString) {
         let msg;
         log.silly("RX:", msgString);
@@ -66,7 +66,20 @@ app.ws('/ws', function(ws, req) {
             game.addConnection(ws, "controller", msg.nick);
             ws.sendJson({id: msg.id, type: "ok"});
         } else if (msg.type === "ready") {
-            game.setPlayerReady(ws);
+            try {
+                game.setPlayerReady(ws);
+            } catch (ex) {
+                ws.sendJson({id: msg.id, type: "error", msg: ex.message});
+                return;
+            }
+            ws.sendJson({id: msg.id, type: "ok"});
+        } else if (msg.type === "start") {
+            try {
+                game.start();
+            } catch (ex) {
+                ws.sendJson({id: msg.id, type: "error", msg: ex.message});
+                return;
+            }
             ws.sendJson({id: msg.id, type: "ok"});
         } else if (msg.type === "subscribe") {
             // TODO: How to deal with conflicts? We currently close the existing con.

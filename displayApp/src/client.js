@@ -6,6 +6,9 @@ let ws;
 
 // Code for the client.html stuff
 window.startClient = async (nick) => {
+    if (nick.length < 1) {
+        return;
+    }
     const joinForm = document.querySelector("#joinForm");
     const lobbySection = document.querySelector("section#lobby");
     const loadingSection = document.querySelector("section#loading");
@@ -14,7 +17,9 @@ window.startClient = async (nick) => {
     loadingSection.hidden = false;
     const gameId = window.location.hash.substr(1);
     backend = new Backend(config.backendUrl);
+    console.log("Getting websocket");
     ws = await backend.getWebsocket(gameId);
+    console.log("Sending join");
     const res = await ws.sendJson({
         type: "join",
         nick,
@@ -31,11 +36,15 @@ window.startClient = async (nick) => {
             lobbySection.hidden = true;
             gameSection.hidden = false;
             // Start sending motion events.
+        } else if (msg.type === "players") {
+            const button = document.querySelector("button#startGame");
+            button.disabled = !msg.canStart;
         }
     }
 }
 
 window.readyUp = async () => {
+    console.log("Sending ready");
     const res = await ws.sendJson({type: "ready"}, true, true);
     if (res.type !== "ok") {
         console.error("Something went wrong:", res);
@@ -44,4 +53,19 @@ window.readyUp = async () => {
     const button = document.querySelector("button#readyup");
     button.disabled = true;
     button.innerHTML = "Ready";
+}
+
+window.startGame = async () => {
+    const lobbySection = document.querySelector("section#lobby");
+    const gameSection = document.querySelector("section#game");
+    console.log("Sending start");
+    const res = await ws.sendJson({
+        type: "start",
+    }, true, true);
+    if (res.type !== "ok") {
+        console.error("Something went wrong:", res);
+        return;
+    }
+    gameSection.hidden = false;
+    lobbySection.hidden = true;
 }
