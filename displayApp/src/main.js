@@ -27,7 +27,6 @@ export default class Game extends Phaser.Game {
     super(gameConfig)
     window.game = this;
     this.oahBackend = new Backend(gameConfig.backendUrl);
-
   }
 
   async loaded() {
@@ -63,5 +62,4 @@ export default class Game extends Phaser.Game {
       return sessionId;
   }
 }
-
 window.Game = Game;

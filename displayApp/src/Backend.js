@@ -1,5 +1,6 @@
 import request from 'superagent'
 import prefix from 'superagent-prefix'
+import config from './config'
 
 export class Backend {
     constructor(baseUrl) {
@@ -25,7 +26,7 @@ export class Backend {
     }
 
     async getWebsocket(gameId) {
-        const ws = new WebSocket(`${this.baseUrl.replace("http", "ws")}/ws`);
+        const ws = new WebSocket(config.wsUrl);
         ws.sendJson = (j, awaitResponse, addId) => {
             if (addId) {
                 j.id = String(Math.ceil(Math.random()*Math.pow(10,16)));
