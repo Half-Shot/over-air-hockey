@@ -61,5 +61,5 @@ typings/
 .next
 
 # Dist
-
+dist/
 *bundle*
