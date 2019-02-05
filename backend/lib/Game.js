@@ -24,7 +24,9 @@ class AirGame {
     }
 
     get json() {
-        return {id: this.id, state: this.state};
+        const players = {};
+        Object.keys(this.players).forEach((k) => players[k] = {state: this.players[k].state});
+        return {id: this.id, state: this.state, players, spectators: Object.keys(this.spectators).length};
     }
 
     /**
@@ -45,9 +47,9 @@ class AirGame {
         }
         if (type === "controller") {
             if (this.players[nick]) {
-                this.players[nick].close();
+                this.players[nick].ws.close();
             }
-            this.players[nick] = ws;
+            this.players[nick] = {ws, state: "notready"};
         } else if (type === "spectator") {
             if (this.spectators[nick]) {
                 this.spectators[nick].close();
@@ -119,7 +121,7 @@ class AirGame {
     broadcast(msg, sendTo = "all") {
         let recipients = [];
         if (sendTo === "all" || sendTo === "players") {
-            recipients = Object.values(this.players);
+            recipients = Object.values(this.players).map((p) => p.ws);
         }
         if (sendTo === "all" || sendTo === "spectators") {
             recipients = recipients.concat(Object.values(this.spectators));

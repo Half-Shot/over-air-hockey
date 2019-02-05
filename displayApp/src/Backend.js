@@ -29,6 +29,9 @@ export class Backend {
         ws.sendJson = (j) => {
             ws.send(JSON.stringify(Object.assign(j, {gameId})));
         };
+        ws.addEventListener("message", (msg) => {
+            ws.onJson(JSON.parse(msg));
+        });
         return new Promise((resolve) => {
             ws.onopen = () => {
                 console.log("Websocket is ready");

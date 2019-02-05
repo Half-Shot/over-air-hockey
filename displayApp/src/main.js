@@ -28,13 +28,17 @@ class Game extends Phaser.Game {
     super(gameConfig)
     window.game = this;
     this.oahBackend = new Backend(gameConfig.backendUrl);
-    this.startSession().then((sessionId) => {
-        console.log("Got session, starting:", sessionId);
-        this.scene.start('LobbyScene', {sessionId});
-        this.scene.stop("BootScene");
-    }).catch((err) => {
-        console.error("Failed to start:", err);
-    });
+
+  }
+
+  async loaded() {
+      this.startSession().then((sessionId) => {
+          console.log("Got session, starting:", sessionId);
+          this.scene.start('LobbyScene', {sessionId});
+          this.scene.stop("BootScene");
+      }).catch((err) => {
+          console.error("Failed to start:", err);
+      });
   }
 
   async startSession() {

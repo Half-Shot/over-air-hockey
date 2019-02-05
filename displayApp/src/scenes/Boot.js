@@ -7,7 +7,7 @@ export default class extends Phaser.Scene {
   }
 
   preload () {
-    this.fontsReady = false
+    this.ready = false
     this.fontsLoaded = this.fontsLoaded.bind(this)
     this.add.text(100, 100, 'loading fonts...')
 
@@ -16,17 +16,19 @@ export default class extends Phaser.Scene {
 
     WebFont.load({
       google: {
-        families: ['Bangers']
+        families: ['Sarabun']
       },
-      active: this.fontsLoaded
-    })
+      fontactive: this.fontsLoaded,
+    });
   }
 
   update () {
-      
+
   }
 
   fontsLoaded () {
-    this.fontsReady = true
+    console.log("Fonts loaded");
+    this.ready = true;
+    this.game.loaded();
   }
 }
