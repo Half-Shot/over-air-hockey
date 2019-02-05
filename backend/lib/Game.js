@@ -6,7 +6,7 @@ class AirGame {
         this.spectators = {};
         // Generate an ID for players to find us, 6 chars long.
         this.id = String(Math.ceil(Math.random()*1000000));
-        this.state = "lobby";
+        this.state = "lobby"; // One of "lobby", "game", "finished"
 
         // TODO: Best way to calculate size of table from meters.
         this.table = {
@@ -23,6 +23,10 @@ class AirGame {
         };
     }
 
+    get json() {
+        return {id: this.id, state: this.state};
+    }
+
     /**
      * Do we need to run the update loop
      */
@@ -31,7 +35,7 @@ class AirGame {
     }
 
     /**
-     * 
+     *
      * @param {WebSocket} ws The websocket connection
      * @param {*} type Type of connection. One of "controller", "spectator".
      */
@@ -40,8 +44,14 @@ class AirGame {
             throw Error("Missing argument(s)");
         }
         if (type === "controller") {
+            if (this.players[nick]) {
+                this.players[nick].close();
+            }
             this.players[nick] = ws;
         } else if (type === "spectator") {
+            if (this.spectators[nick]) {
+                this.spectators[nick].close();
+            }
             this.spectators[nick] = ws;
         }
     }
