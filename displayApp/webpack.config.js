@@ -5,7 +5,7 @@ const BrowserSyncPlugin = require('browser-sync-webpack-plugin')
 module.exports = {
   entry: {
     app: [path.resolve(__dirname, 'src/main.js')],
-    vendor: ['phaser']
+    vendor: ['phaser', 'superagent', 'superagent-prefix']
   },
   mode: 'development',
   output: {

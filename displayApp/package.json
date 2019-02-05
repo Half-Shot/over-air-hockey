@@ -18,6 +18,8 @@
     "html-webpack-plugin": "^3.2.0",
     "idiom.js": "^1.0.0",
     "phaser": "^3.15.1",
+    "superagent": "^4.1.0",
+    "superagent-prefix": "0.0.2",
     "webfontloader": "^1.6.28",
     "webpack": "^4.29.1"
   },
