@@ -25,7 +25,9 @@ module.exports = {
       port: process.env.PORT || 3000,
       server: {
         baseDir: ['./', './build']
-      }
+      },
+      // Or switch them all off in one go
+      ghostMode: false
     })
   ],
   module: {
