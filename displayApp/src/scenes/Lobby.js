@@ -8,42 +8,38 @@ export default class extends Phaser.Scene {
     }
     init ({sessionId}) {
         this.sessionId = sessionId;
-        this.players = {
-            "teeeeeeeeeest": "Ready",
-            "foo": "Not Ready",
-        }
         this.playerText = [];
         this.game.oahBackend.getWebsocket(sessionId).then((ws) => {
             this.ws = ws;
             console.log(this.ws);
             this.ws.sendJson({
-                id: String(Math.ceil(Math.random()*Math.pow(10,16))),
                 type: "subscribe",
                 nick: "DisplayApp", // TODO: Set a nick somehow?
             });
-            this.ws.onJson((msg) => {
+            this.ws.onJson = (msg) => {
+                if (msg.type === "players") {
+                    this.renderPlayerList(msg.players);
+                }
                 console.log("RX:", msg);
-            });
-            return this.oahBackend.getSession(sessionId);
+            };
+            return this.game.oahBackend.getSession(sessionId);
         }).then((session) => {
-            Object.keys(session.players).forEach((k) => {
-                const state = session.players[k].state === "not-ready" ? "Not Ready" : "Ready";
-                this.players[k] = state;
-            });
+            this.renderPlayerList(session.players);
         });
     }
+
     preload () {}
 
-    renderPlayerList() {
+    renderPlayerList(players) {
         this.playerText.forEach((textObject) => {
             textObject.destroy();
         });
-        Object.keys(this.players).forEach((name, i) => {
-            const status = this.players[name];
-            this.add.text(150, 300 + (33*i), `${name} - ${this.players[name]}`, {
+        Object.keys(players).forEach((name, i) => {
+            const state = players[name].state === "notready" ? "Not Ready" : "Ready";
+            this.playerText.push(this.add.text(150, 300 + (33*i), `${name} - ${state}`, {
                 font: `${config.scaleY * 20}px Sarabun`,
-                fill: status === "Ready" ? "green" : "red",
-            });
+                fill: state === "Ready" ? "green" : "red",
+            }));
         });
     }
 
@@ -62,7 +58,5 @@ export default class extends Phaser.Scene {
             font: `${config.scaleY * 20}px Sarabun`,
             fill: '#7744ff'
         });
-        this.renderPlayerList();
-
     }
 }

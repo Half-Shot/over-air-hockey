@@ -50,12 +50,30 @@ class AirGame {
                 this.players[nick].ws.close();
             }
             this.players[nick] = {ws, state: "notready"};
+            this.broadcast({
+                type: "players",
+                players: this.json.players,
+            });
         } else if (type === "spectator") {
             if (this.spectators[nick]) {
                 this.spectators[nick].close();
             }
             this.spectators[nick] = ws;
         }
+    }
+
+    setPlayerReady(ws) {
+        const player = Object.values(this.players).find((p) =>
+            p.ws === ws
+        );
+        if (!player) {
+            throw Error ("Player not found");
+        }
+        player.state = "ready";
+        this.broadcast({
+            type: "players",
+            players: this.json.players,
+        });
     }
 
     onData(msg) {
@@ -126,6 +144,7 @@ class AirGame {
         if (sendTo === "all" || sendTo === "spectators") {
             recipients = recipients.concat(Object.values(this.spectators));
         }
+        console.log(recipients);
         recipients.forEach((ws) => {
             ws.sendJson(msg);
         });

@@ -62,9 +62,16 @@ app.ws('/ws', function(ws, req) {
         }
         if (msg.type === "paddle") {
             game.onData(msg);
+        } else if (msg.type === "join") {
+            game.addConnection(ws, "controller", msg.nick);
+            ws.sendJson({id: msg.id, type: "ok"});
+        } else if (msg.type === "ready") {
+            game.setPlayerReady(ws);
+            ws.sendJson({id: msg.id, type: "ok"});
         } else if (msg.type === "subscribe") {
             // TODO: How to deal with conflicts? We currently close the existing con.
             game.addConnection(ws, "spectator", msg.nick);
+            ws.sendJson({id: msg.id, type: "ok"});
         } else {
             log.warn("index.js", "Could not handle ws message: Type not understood");
             ws.sendJson({

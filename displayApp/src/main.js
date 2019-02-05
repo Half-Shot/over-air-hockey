@@ -1,5 +1,4 @@
 import Phaser from 'phaser'
-
 import BootScene from './scenes/Boot'
 import GameScene from './scenes/Game'
 import LobbyScene from './scenes/Lobby'
@@ -23,7 +22,7 @@ const gameConfig = Object.assign(config, {
   scene: [BootScene, GameScene, LobbyScene]
 })
 
-class Game extends Phaser.Game {
+export default class Game extends Phaser.Game {
   constructor () {
     super(gameConfig)
     window.game = this;
@@ -65,4 +64,4 @@ class Game extends Phaser.Game {
   }
 }
 
-window.game = new Game()
+window.Game = Game;

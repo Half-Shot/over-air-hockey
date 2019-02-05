@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Over Air Hockey - Client</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta http-equiv="cleartype" content="on">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Sarabun');
+        html,
+        body {
+            margin: 5px;
+            padding: 0;
+            font-family: 'Sarabun', sans-serif;
+            text-align: center;
+        }
+        #nick {
+            font-size: 28pt;
+            width: 300px;
+        }
+
+        section > * {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 45px;
+        }
+
+        button {
+            font-size: 28pt;
+            border-radius: 4px;
+            height: 100px;
+            width: 300px;
+            background-color: white;
+            border-color: black;
+        }
+    </style>
+    <script>
+        function joinGame() {
+            window.startClient(document.querySelector("#nick").value);
+        }
+    </script>
+</head>
+
+<body>
+    <h1> Over Air Hockey </h1>
+    <section id="joinForm">
+        <input id="nick" placeholder="playername"></input>
+        <button onclick="joinGame()">Join game!</button>
+    </section>
+    <section id="loading" hidden>
+        Loading...
+    </section>
+    <section id="lobby" hidden>
+        <p>You are in the lobby.</p>
+        <button id="readyup" onclick="readyUp()">Ready up!</button>
+    </section>
+    <section id="game" hidden>
+        <p> The game is in play! Use your device like an Air Hockey paddle</p>
+        <p>This could be a good play to display information...</p>
+    </section>
+    <script type="text/javascript" src="./dist/vendor.bundle.js"></script>
+    <script type="text/javascript" src="./dist/bundle.js"></script>
+</body>
+
+</html>
