@@ -44,5 +44,10 @@ module.exports = {
       name: 'vendor',
       chunks: 'all'
     }
+  },
+  devServer: {
+    contentBase: path.join(__dirname),
+    compress: true,
+    port: 9000
   }
 }
