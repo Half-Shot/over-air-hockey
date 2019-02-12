@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>canvas</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+    canvas {
+      background: black; display: block; margin: 0 auto; 
+    }
+  </style>
+</head>
+<body>
+<canvas id="myCanvas" width="480" height="550"></canvas>
+<script>
+  let canvas = document.getElementById('myCanvas');
+  let ctx = canvas.getContext("2d");
+  let x = canvas.width/2;
+  let y = canvas.height -30;
+  let dx = 3;
+  let dy = -3;
+  let ballY = y + dy;
+  let ballX = x + dx;
+  let ballRadius = 10;
+  let paddleHeight = 10;
+  let paddleWidth = 100;
+  let paddleX = canvas.width-paddleWidth/2;
+  let paddle2X = canvas.width-paddleWidth/2;
+  let paddle2Xcenter = paddle2X + (paddleWidth/2)
+  let rightPressed = false;
+  let leftPressed = false;
+
+
+
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+    ctx.fillStyle = "red";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawPaddle() {
+    ctx.beginPath();
+    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+    function drawPaddle2() {
+    ctx.beginPath();
+    ctx.rect(paddle2X, 0, paddleWidth, paddleHeight);
+    ctx.fillStyle = "yellow";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBall();
+    drawPaddle();
+    drawPaddle2();
+    x += dx;
+    y += dy;
+
+//game over
+
+    if (y + dy < ballRadius) {
+      dy = -dy;
+    } else if (y + dy > canvas.height-ballRadius)
+      if (x > paddleX && x < paddleX+paddleWidth) {
+        dy = -dy;
+    }
+      else {
+     alert("GAME OVER");
+     document.location.reload();
+    }
+
+
+// colision detection
+    if (y + dy > canvas.height-ballRadius || y + dy < ballRadius) {
+      dy = -dy; // reverse movement of the ball
+    }
+    
+    if (x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+      dx = -dx; // reverse movement of the ball
+    }
+
+
+// moving paddles 
+    if (rightPressed && paddleX < canvas.width-paddleWidth) {
+      paddleX += 7;
+    }
+    else if (leftPressed && paddleX >0) {
+      paddleX -= 7;
+    }
+
+
+// second paddle movement
+
+    if (paddle2X < ballX-35) {
+      paddle2X += 10;
+    } else if (paddle2X > ballX+35) {
+      paddle2X -= 10;
+    }
+
+
+
+  } // end of draw();
+
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+function keyDownHandler(e) {
+  if (e.key == "ArrowRight") {
+    rightPressed = true;
+    console.log("key right is pressed");
+  }
+  else if(e.key == "ArrowLeft") {
+    leftPressed = true;
+    console.log("key left is pressed");
+  }
+}
+
+function keyUpHandler(e) {
+if (e.key == "ArrowRight") {
+    rightPressed = false;
+    console.log("key right is released");
+  }
+  else if(e.key == "ArrowLeft") {
+    leftPressed = false;
+    console.log("key left is released");
+  }
+}
+
+let interval = setInterval(draw, 10);
+
+
+
+</script>
+</body>
+</html>
