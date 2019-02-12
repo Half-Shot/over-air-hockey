@@ -73,7 +73,7 @@ app.ws('/ws', function(ws, req) {
 
         if (msg.type === "paddle") {
             // Player moved their paddle.
-            game.onData(msg);
+            game.paddleMoved(ws, msg.direction);
         } else if (msg.type === "join") {
             // Player joined as a controller.
             game.addConnection(ws, "controller", msg.nick);
