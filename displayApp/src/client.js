@@ -1,5 +1,6 @@
 import {Backend} from './Backend'
 import config from './config'
+import Controller from './controller'
 
 let backend;
 let ws;
@@ -36,6 +37,15 @@ window.startClient = async (nick) => {
             lobbySection.hidden = true;
             gameSection.hidden = false;
             // Start sending motion events.
+            window._motionController = new Controller(
+                (direction) => { // This fires whenever there is motion.
+                    //TODO: Show something on the screen?
+                    ws.sendJson({
+                        type: "paddle",
+                        direction,
+                    }, false, true)
+                }
+            );
         } else if (msg.type === "players") {
             const button = document.querySelector("button#startGame");
             button.disabled = !msg.canStart;
@@ -68,4 +78,5 @@ window.startGame = async () => {
     }
     gameSection.hidden = false;
     lobbySection.hidden = true;
+
 }
