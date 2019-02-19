@@ -1,6 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import config from '../config'
+import QRCode from 'qrcode'
 
 export default class extends Phaser.Scene {
     constructor () {
@@ -9,18 +10,26 @@ export default class extends Phaser.Scene {
     init ({sessionId}) {
         this.sessionId = sessionId;
         this.playerText = [];
+        QRCode.toDataURL(config.joinUrl + `#${sessionId}`, function (err, url) {
+            if (err) {
+                console.error("Failed to generate QR code");
+                return;
+            }
+            document.querySelector("img").hidden = false;
+            document.querySelector("img").src = url;
+        });
         this.game.oahBackend.getWebsocket(sessionId).then((ws) => {
-            this.ws = ws;
-            console.log(this.ws);
-            this.ws.sendJson({
+            this.game.oahWs = ws;
+            this.game.oahWs.sendJson({
                 type: "subscribe",
                 nick: "DisplayApp", // TODO: Set a nick somehow?
             });
-            this.ws.onJson = (msg) => {
+            this.game.oahWs.onJson = (msg) => {
                 if (msg.type === "players") {
                     this.renderPlayerList(msg.players);
                 } else if (msg.type === "start") {
-                    this.scene.start('GameScene', {sessionId});
+                    document.querySelector("img").hidden = true;
+                    this.scene.start('GameScene', {sessionId, startMsg: msg});
                     this.scene.stop("LobbyScene");
                 }
                 console.log("RX:", msg);

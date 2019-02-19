@@ -31,9 +31,7 @@ export default class Game extends Phaser.Game {
 
   async loaded() {
       this.startSession().then((sessionId) => {
-          console.log("Got session, starting:", sessionId);
-          this.scene.start('LobbyScene', {sessionId});
-          this.scene.stop("BootScene");
+          console.log("Got session:", sessionId);
       }).catch((err) => {
           console.error("Failed to start:", err);
       });
@@ -45,12 +43,25 @@ export default class Game extends Phaser.Game {
           // Session found, check where it's at.
           try {
               const state = await this.oahBackend.getSession(sessionId);
-              if (state.state !== "finished")  {
-                  return sessionId;
+              if (state.redirectId) {
+                  sessionId = state.redirectId;
               }
+              if (state.state === "finished")  {
+                  throw ({status: 404}); // :3
+              } else if (state.state === "lobby") {
+                  this.scene.start('LobbyScene', {sessionId});
+                  this.scene.stop("BootScene");
+              } else if (state.state === "game") {
+                  this.oahBackend.getWebsocket(sessionId).then((ws) => {
+                      this.oahWs = ws;
+                      this.scene.start('GameScene', {sessionId, startMsg: state});
+                      this.scene.stop("BootScene");
+                  })
+              }
+              return;
           } catch (ex) {
               if (ex.status !== 404) { // Does 404 always mean the game wasn't found?
-                  throw Error("Unexpected error:", ex);
+                  throw ex;
               }
           }
       }
@@ -59,6 +70,8 @@ export default class Game extends Phaser.Game {
       console.log("Created game:", game);
       localStorage.setItem(LOCALSTORAGE_KEY, game.id);
       sessionId = game.id;
+      this.scene.start('LobbyScene', {sessionId});
+      this.scene.stop("BootScene");
       return sessionId;
   }
 }

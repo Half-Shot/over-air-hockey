@@ -20,6 +20,13 @@
             margin: 0;
             padding: 0;
         }
+        img {
+            width: 25vw;
+            right: 25px;
+            top:25px;
+            z-index: 10;
+            position: absolute;
+        }
     </style>
 </head>
 
@@ -27,6 +34,8 @@
     <main id="content">
 
     </main>
+    <img id="qrcode">
+    </img>
     <script>
         window.onload = () => {
             new Game();

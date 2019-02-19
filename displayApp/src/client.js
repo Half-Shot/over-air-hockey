@@ -2,8 +2,23 @@ import {Backend} from './Backend'
 import config from './config'
 import Controller from './controller'
 
-let backend;
+const backend = new Backend(config.backendUrl);
 let ws;
+let gameId =  window.location.hash.substr(1);
+let sessionState = null;
+
+window.preStart = async () => {
+    console.log("Checking that the game exists..");
+    while(!sessionState) {
+        try {
+            sessionState = await backend.getSession(gameId);
+            console.log(sessionState);
+        } catch (ex) {
+            gameId = parseInt(prompt("Hmm, couldn't find that game. Try entering another?", "GameId"));
+        }
+    }
+
+};
 
 // Code for the client.html stuff
 window.startClient = async (nick) => {
@@ -16,8 +31,6 @@ window.startClient = async (nick) => {
     const gameSection = document.querySelector("section#game");
     joinForm.hidden = true;
     loadingSection.hidden = false;
-    const gameId = window.location.hash.substr(1);
-    backend = new Backend(config.backendUrl);
     console.log("Getting websocket");
     ws = await backend.getWebsocket(gameId);
     console.log("Sending join");
@@ -46,6 +59,7 @@ window.startClient = async (nick) => {
                     }, false, true)
                 }
             );
+            window._motionController.startCapture();
         } else if (msg.type === "players") {
             const button = document.querySelector("button#startGame");
             button.disabled = !msg.canStart;

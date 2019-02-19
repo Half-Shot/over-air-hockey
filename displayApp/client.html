@@ -41,15 +41,9 @@
             border-color: black;
         }
     </style>
-    <script>
-        function joinGame() {
-            console.log("Join Game called")
-            window.startClient(document.querySelector("#nick").value);
-        }
-    </script>
 </head>
 
-<body>
+<body onload="window.preStart()">
     <h1> Over Air Hockey </h1>
     <section id="joinForm">
         <input id="nick" placeholder="playername"></input>
@@ -67,9 +61,18 @@
         <p> The game is in play! Use your device like an Air Hockey paddle</p>
         <p>This could be a good play to display information...</p>
     </section>
+    <pre id="debugInfo">
+        Debug info
+    </pre>
     <script type="text/javascript" src="./dist/vendor.bundle.js"></script>
     <script type="text/javascript" src="./dist/bundle.js"></script>
     <script type="text/javascript" src="./dist/1.bundle.js"></script>
+    <script>
+        function joinGame() {
+            console.log("Join Game called")
+            window.startClient(document.querySelector("#nick").value);
+        }
+    </script>
 </body>
 
 </html>
