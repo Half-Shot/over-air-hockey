@@ -37,7 +37,7 @@ export default class extends Phaser.Scene {
             } else if (msg.type === "paddleMoved") { // Player paddle moved.
                 console.log("Got paddleMoved update: ", msg);
                 // Another hack around left right players.
-                if (msg.nick === this.scoreText[0]) {
+                if (msg.nick === Object.keys(this.scores)[0]) {
                     this.updatePlrPosition(msg.endPoint, this.player1Paddle);
                     setTimeout(() => {
                         this.updatePlrPosition(this.plr1Pos, this.player1Paddle);
@@ -58,7 +58,7 @@ export default class extends Phaser.Scene {
                 this.createPlayerScores();
             } else if (msg.type === "finished") {
                 console.log(`FINISHED: ${msg.winner} wins`);
-                this.add.text(200, 200 , `${nick} has won! Tap "Rematch" to play again.`, {
+                this.add.text(200, 200 , `${msg.winner} has won! Tap "Rematch" to play again.`, {
                     font: `${config.scaleY * 24}px Sarabun`,
                     fill: '#7744ff'
                 });
