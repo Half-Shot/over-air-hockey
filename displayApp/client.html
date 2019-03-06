@@ -11,6 +11,7 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#ffffff">
     <link rel="manifest" href="/manifest.json">
+    <audio id="puckhit" src="assets/sounds/puckhit.ogg" hidden></audio>
     <style>
         @import url('https://fonts.googleapis.com/css?family=Sarabun');
         html,
@@ -60,6 +61,10 @@
     <section id="game" hidden>
         <p> The game is in play! Use your device like an Air Hockey paddle</p>
         <p>This could be a good play to display information...</p>
+    </section>
+    <section id="finished" hidden>
+        <p> The game is over. You can choose to rematch.</p>
+        <button id="rematch" onclick="rematch()">Ready up!</button>
     </section>
     <pre id="debugInfo">
         Debug info

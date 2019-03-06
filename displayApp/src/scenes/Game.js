@@ -24,6 +24,8 @@ export default class extends Phaser.Scene {
         };
         this.puck = null;
         this.table = null;
+        this.scores = {};
+        this.scoreText = [];
         this.player1Paddle = null;
         this.player2Paddle = null;
     }
@@ -34,21 +36,45 @@ export default class extends Phaser.Scene {
                 console.log("Got players update: ", msg);
             } else if (msg.type === "paddleMoved") { // Player paddle moved.
                 console.log("Got paddleMoved update: ", msg);
-                let oldX = this.plr1Pos.x;
-                let oldY = this.plr1Pos.y;
-                this.updatePlrPosition(msg.endPoint, this.player1Paddle);
-                setTimeout(() => {
-                    this.updatePlrPosition(this.plr1Pos, this.player1Paddle);
-                }, 200);
+                // Another hack around left right players.
+                if (msg.nick === this.scoreText[0]) {
+                    this.updatePlrPosition(msg.endPoint, this.player1Paddle);
+                    setTimeout(() => {
+                        this.updatePlrPosition(this.plr1Pos, this.player1Paddle);
+                    }, 200);
+                } else {
+                    this.updatePlrPosition(msg.endPoint, this.player2Paddle);
+                    setTimeout(() => {
+                        this.updatePlrPosition(this.plr2Pos, this.player2Paddle);
+                    }, 200);
+                }
             } else if (msg.type === "puckUpdate") { // Puck bounced
                 console.log("Got puck update. delay:", Date.now() - msg.sentAt);
                 this.puckPos = msg.puck;
                 this.updatePuckPosition();
+            } else if (msg.type === "score") {
+                console.log(`SCORE: ${msg.nick} ${msg.score}`);
+                this.scores[msg.nick] = msg.score;
+                this.createPlayerScores();
+            } else if (msg.type === "finished") {
+                console.log(`FINISHED: ${msg.winner} wins`);
+                this.add.text(200, 200 , `${nick} has won! Tap "Rematch" to play again.`, {
+                    font: `${config.scaleY * 24}px Sarabun`,
+                    fill: '#7744ff'
+                });
+                this.puck.destroy();
+            } else if (msg.type === "lobby") {
+                this.game.oahWs.close();
+                this.scene.start('LobbyScene', {sessionId});
+                this.scene.stop("GameScene");
             }
         }
-        console.log(startMsg);
+        Object.keys(startMsg.players).forEach((nick) => this.scores[nick] = 0);
+        this.state = startMsg;
+        console.log("Start:", startMsg);
         this.puckPos = startMsg.puck;
-        this.plr1Pos = startMsg.players[0];
+        this.plr1Pos = Object.values(startMsg.players)[0];
+        this.plr2Pos = Object.values(startMsg.players)[1];
         this.tableScaleX = TABLE_WIDTH / startMsg.table.width;
         this.tableScaleY = TABLE_HEIGHT / startMsg.table.height;
     }
@@ -64,9 +90,23 @@ export default class extends Phaser.Scene {
         this.tableTopY = topMargin;
         this.table = this.createTable(sideMargin, topMargin);
         this.puck = this.createPuck(sideMargin, topMargin);
-        this.player1Paddle = this.createPlayerPaddle();
+        this.player1Paddle = this.createPlayerPaddle(0x0000FF);
+        this.player2Paddle = this.createPlayerPaddle(0x00FF00);
+        this.createPlayerScores();
         this.updatePlrPosition(this.plr1Pos, this.player1Paddle);
+        this.updatePlrPosition(this.plr2Pos, this.player2Paddle);
         this.updatePuckPosition();
+    }
+
+    createPlayerScores() {
+        this.scoreText.forEach((sT) => sT.destroy());
+        this.scoreText = Object.keys(this.scores).map((nick, i) => {
+            const y = 25 + (config.scaleY * 24)* i;
+            return this.add.text(25, y , `${nick}: ${this.scores[nick]}`, {
+                font: `${config.scaleY * 24}px Sarabun`,
+                fill: '#7744ff'
+            });
+        });
     }
 
     createTable(sideMargin, topMargin) {
@@ -79,6 +119,22 @@ export default class extends Phaser.Scene {
         graphics.strokeRect( 0, 0, TABLE_WIDTH, TABLE_HEIGHT);
         graphics.setX(sideMargin);
         graphics.setY(topMargin);
+        // Draw goals.
+        graphics.lineStyle(5, 0xFF00FF, 1.0);
+        graphics.beginPath();
+        graphics.moveTo(0, TABLE_HEIGHT * 0.25);
+        graphics.lineTo(0, TABLE_HEIGHT * 0.75);
+        graphics.closePath();
+        graphics.strokePath();
+
+        graphics.lineStyle(5, 0xFF00FF, 1.0);
+        graphics.beginPath();
+        graphics.moveTo(TABLE_WIDTH, TABLE_HEIGHT * 0.25);
+        graphics.lineTo(TABLE_WIDTH, TABLE_HEIGHT * 0.75);
+        graphics.closePath();
+        graphics.strokePath();
+
+
         return graphics;
     }
 
@@ -100,7 +156,7 @@ export default class extends Phaser.Scene {
         return puck;
     }
 
-    createPlayerPaddle() {
+    createPlayerPaddle(color ) {
         const plr = this.add.graphics();
         const radius = PLR_RADIUS * this.tableScaleX;
         plr.lineStyle(radius + 3, 0x000000);
@@ -111,7 +167,7 @@ export default class extends Phaser.Scene {
         plr.closePath();
 
         plr.beginPath();
-        plr.lineStyle(radius, 0x0000FF);
+        plr.lineStyle(radius, color);
         plr.arc(0, 0, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(360), true, 0.02);
         plr.strokePath();
         plr.closePath();

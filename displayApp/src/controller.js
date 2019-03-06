@@ -2,7 +2,7 @@ const MINPOWERTOACTIVATE = 15;
 
 const THRESHOLD = 6;
 const MAX_POWER = 40;
-const TIMEOUT = 333;
+const TIMEOUT = 444;
 
 export default class Controller {
 
@@ -37,7 +37,7 @@ export default class Controller {
                 this.onMotion(dir);
             }
         }
-        document.querySelector("#debugInfo").innerHTML = JSON.stringify(debugData);
+        //document.querySelector("#debugInfo").innerHTML = JSON.stringify(debugData);
     }
 
     _calculateDirectionOfMotion(accel) {

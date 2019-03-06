@@ -26,6 +26,7 @@ export default class extends Phaser.Scene {
             });
             this.game.oahWs.onJson = (msg) => {
                 if (msg.type === "players") {
+                    console.log("Player list refreshed", msg);
                     this.renderPlayerList(msg.players);
                 } else if (msg.type === "start") {
                     document.querySelector("img").hidden = true;

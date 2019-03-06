@@ -54,6 +54,10 @@ export default class Game extends Phaser.Game {
               } else if (state.state === "game") {
                   this.oahBackend.getWebsocket(sessionId).then((ws) => {
                       this.oahWs = ws;
+                      this.oahWs.sendJson({
+                          type: "subscribe",
+                          nick: "DisplayApp", // TODO: Set a nick somehow?
+                      });
                       this.scene.start('GameScene', {sessionId, startMsg: state});
                       this.scene.stop("BootScene");
                   })

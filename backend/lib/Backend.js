@@ -38,9 +38,16 @@ class Backend {
     createFakeGame() {
         // Create a fake websocket
         const fakeWs = new FakeWs();
+        const fakeWs2 = new FakeWs();
+        //const fakeWs3 = new FakeWs();
         const game = new Game(undefined, undefined, 1);
         this.ongoingGames[game.id] = game;
         game.addConnection(fakeWs, "spectator", "Mr. FakeScreen");
+        game.addConnection(fakeWs2, "controller", "Player One");
+        //game.addConnection(fakeWs3, "controller", "Player Two");
+        game.setPlayerReady(fakeWs2);
+        //game.setPlayerReady(fakeWs3);
+        //game.start();
         log.info("Backend", `Created new fake game ${game.id}`);
         return game;
     }
@@ -63,7 +70,7 @@ class Backend {
     Create a new session. See Game.constructor for what this entails.
      */
     _sessionCreate(req, res) {
-        const game = new Game(undefined, undefined, 1);
+        const game = new Game();
         this.ongoingGames[game.id] = game;
         log.info("Backend", `Created new game ${game.id}`);
         res.send(game.json);
@@ -154,6 +161,10 @@ class Backend {
                 // TODO: How to deal with conflicts? We currently close the existing con.
                 game.addConnection(ws, "spectator", msg.nick);
                 ws.sendJson({id: msg.id, type: "ok"});
+            } else if (msg.type === "rematch") {
+                // The display app has connected and waits to listen for events.
+                // TODO: How to deal with conflicts? We currently close the existing con.
+                game.rematch();
             } else {
                 log.warn("Backend", "Could not handle ws message: Type not understood");
                 ws.sendJson({

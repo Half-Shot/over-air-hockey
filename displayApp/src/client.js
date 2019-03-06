@@ -52,7 +52,6 @@ window.startClient = async (nick) => {
             // Start sending motion events.
             window._motionController = new Controller(
                 (direction) => { // This fires whenever there is motion.
-                    //TODO: Show something on the screen?
                     ws.sendJson({
                         type: "paddle",
                         direction,
@@ -63,6 +62,12 @@ window.startClient = async (nick) => {
         } else if (msg.type === "players") {
             const button = document.querySelector("button#startGame");
             button.disabled = !msg.canStart;
+        } else if (msg.type === "puckUpdate" && msg.nick === nick) {
+            window.navigator.vibrate(150);
+            document.querySelector("audio").play();
+        } else if (msg.type === "finished") {
+            document.querySelector("section#finished").hidden = false;
+            document.querySelector("section#game").hidden = true;
         }
     }
 }
@@ -93,4 +98,18 @@ window.startGame = async () => {
     gameSection.hidden = false;
     lobbySection.hidden = true;
 
+}
+
+window.rematch = async () => {
+    const lobbySection = document.querySelector("section#lobby");
+    const finishedSection = document.querySelector("section#finished");
+    const res = await ws.sendJson({
+        type: "rematch",
+    }, true, true);
+    if (res.type !== "ok") {
+        console.error("Something went wrong:", res);
+        return;
+    }
+    lobbySection.hidden = false;
+    finishedSection.hidden = true;
 }
