@@ -1,10 +1,18 @@
 const cors = require('cors');
 const log = require("npmlog");
 const express = require('express');
+const promClient = require('prom-client');
 const Game = require('./Game');
 const FakeWs = require("./FakeWs");
-
 const UPDATE_TIME = 1000 / 25; // Run update loop at 60hz
+
+promClient.collectDefaultMetrics({ timeout: 5000 });
+
+const wsMessagesReceived = new promClient.Counter({
+    name: 'ws_messages',
+    help: 'Websocket messages received',
+    labelNames: ['type']
+});
 
 class Backend {
     constructor(opts) {
@@ -33,6 +41,13 @@ class Backend {
             console.log(game);
         }
         app.listen(this.opts.port, () => log.info("Backend", `Backend listening on port ${this.opts.port}!`));
+
+        const metricsApp = express();
+        metricsApp.get('/metrics', (_, res) => {
+            res.set('Content-Type', promClient.register.contentType);
+            res.end(promClient.register.metrics());
+        });
+        metricsApp.listen(9900, () => log.info("Backend", `Metrics listening on port 9900!`));
     }
 
     createFakeGame() {
@@ -118,6 +133,7 @@ class Backend {
             } catch (ex) {
                 log.warn("Backend", "Websocket contents could not be parsed: " + ex.message);
             }
+            wsMessagesReceived.inc({type: msg.type});
 
             const game = this.ongoingGames[msg.gameId];
             if (!game) {

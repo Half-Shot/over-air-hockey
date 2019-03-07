@@ -1,4 +1,5 @@
 const log = require("npmlog");
+const promClient = require('prom-client');
 
 const SPEED_MULTIPLIER = 10;
 const MIN_VELOCITY = 100;
@@ -13,12 +14,44 @@ const GOAL_HEIGHT_PERCENTAGE = 0.5;
 
 const WIN_SCORE = 9;
 
+const gamesCreated = new promClient.Counter({
+    name: 'oah_games_created',
+    help: 'Number of games created',
+    labelNames: []
+});
+
+const timeTakenToStartGame = new promClient.Gauge({
+    name: 'oah_start_time',
+    help: 'How long did the game take to start, in ms',
+    labelNames: []
+});
+
+const paddleSwingCount = new promClient.Counter({
+    name: 'oah_paddle_swings',
+    help: 'Paddle swings at the puck',
+    labelNames: ['hit', 'player_side']
+});
+
+const goalsScored = new promClient.Counter({
+    name: 'oah_goals_scored',
+    help: 'How many goals have been scored, and by who',
+    labelNames: ['player_side']
+});
+
+const completedGames = new promClient.Counter({
+    name: 'oah_completed_games',
+    help: 'How many games finished',
+    labelNames: []
+});
+
+
 /**
  * AirGame holds all the logic for the actual lobby and game.
  */
 class AirGame {
     constructor (tableWidthMeters = 4, tableHeightMeters = 1, minPlayers = 2) {
         this.minPlayers = minPlayers;
+        this.creationTime = Date.now();
         this.players = {};
         this.spectators = {};
         this.lastPuckUpdate = 0;
@@ -48,6 +81,7 @@ class AirGame {
             velocityX: 0,
             velocityY: 0,
         };
+        gamesCreated.inc();
     }
 
     /**
@@ -105,6 +139,7 @@ class AirGame {
      * Start the game
      */
     start (forcePuck = undefined) {
+        timeTakenToStartGame.set(Date.now() - this.creationTime);
         if (this.state === "game") {
             throw Error ("Already in-game");
         } else if (!this.canStart) {
@@ -237,6 +272,7 @@ class AirGame {
         const puck = this.puck; // Shorthand.
         // Now, check if the puck is inside the boundaries.
         if ((left && puck.x > bbox.topRight.x) || (!left && puck.x < bbox.topRight.x)) {
+            paddleSwingCount.inc({hit: "false", player_side: left ? "left" : "right"});
             // Puck isn't inside our radius, ignore.
             return false;
         }
@@ -252,6 +288,7 @@ class AirGame {
         log.verbose(this.GLSTR, `relX:${relX} yTop:${yTop} yBottom:${yBottom}`);
         // Check if it's inside the widths.
         if (puck.y > yTop || puck.y < yBottom) {
+            paddleSwingCount.inc({hit: "false", player_side: left ? "left" : "right"});
             return false;
         }
         log.verbose(this.GLSTR, "Puck IS inside boundary");
@@ -376,6 +413,7 @@ class AirGame {
                         log.info(this.GLSTR, "Puck placed in front of PL1");
                         this.puck.x = puckXEdge + 80;
                         this.puck.y = this.players[plrNick].y;
+                        goalsScored.inc({player_side: "left"});
                     } else {
                         // Goal was in P2s goal.
                         plrNick = Object.keys(this.players)[1];
@@ -383,6 +421,7 @@ class AirGame {
                         log.info(this.GLSTR, "Puck placed in front of PL2");
                         this.puck.x = this.table.width - 80;
                         this.puck.y = this.players[plrNick].y;
+                        goalsScored.inc({player_side: "right"});
                     }
                     this.puck.velocityX = 0;
                     this.puck.velocityY = 0;
@@ -391,6 +430,7 @@ class AirGame {
                     if (this.players[scorer].score === WIN_SCORE) {
                         this.broadcast({ type: "finished", winner: scorer});
                         this.state = "finished";
+                        completedGames.inc();
                         return;
                     }
             } else {
